@@ -89,13 +89,9 @@ class MNPSeleniumScraper:
             )
             for input_elem in score_inputs:
                 value = input_elem.get_attribute("value")
-                name = input_elem.get_attribute("name") or input_elem.get_attribute(
-                    "id"
-                )
+                name = input_elem.get_attribute("name") or input_elem.get_attribute("id")
                 if value and value.isdigit():
-                    game_data["scores"].append(
-                        {"value": value, "name": name, "type": "number"}
-                    )
+                    game_data["scores"].append({"value": value, "name": name, "type": "number"})
 
             # Look for player names
             player_inputs = self.driver.find_elements(
@@ -178,10 +174,7 @@ class MNPSeleniumScraper:
 
                 if not filename:
                     parsed_url = urlparse(img_url)
-                    filename = (
-                        os.path.basename(parsed_url.path)
-                        or f"image_{hash(img_url)}.jpg"
-                    )
+                    filename = os.path.basename(parsed_url.path) or f"image_{hash(img_url)}.jpg"
 
                 filepath = os.path.join(save_dir, filename)
 
@@ -211,9 +204,7 @@ class MNPSeleniumScraper:
             # Download images
             for j, img_url in enumerate(game_data["images"]):
                 filename = f"game_{i+1}_img_{j+1}.png"
-                local_path = self.download_image(
-                    img_url, f"{output_dir}/images", filename
-                )
+                local_path = self.download_image(img_url, f"{output_dir}/images", filename)
                 if local_path:
                     game_data["local_images"] = game_data.get("local_images", [])
                     game_data["local_images"].append(local_path)

@@ -66,9 +66,7 @@ class PaddleOCRFormatter:
             annotations.append(annotation)
 
         # PaddleOCR format: image_path\tannotations_json
-        annotation_line = (
-            f"{output_name}\t{json.dumps(annotations, ensure_ascii=False)}\n"
-        )
+        annotation_line = f"{output_name}\t{json.dumps(annotations, ensure_ascii=False)}\n"
         return annotation_line
 
     def create_simple_text_annotation(self, scores):
