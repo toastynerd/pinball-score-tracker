@@ -1,0 +1,273 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS Batch infrastructure for PaddleOCR training with GPU support'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: pinball-ocr-training
+    Description: Name for the project resources
+  
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC ID where resources will be created
+  
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Subnet IDs for the compute environment
+  
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: EC2 Key Pair for SSH access
+    Default: ""
+  
+  MaxvCpus:
+    Type: Number
+    Default: 256
+    Description: Maximum vCPUs for the compute environment
+  
+  MinvCpus:
+    Type: Number
+    Default: 0
+    Description: Minimum vCPUs for the compute environment
+
+Resources:
+  # S3 Bucket for storing datasets and model artifacts
+  TrainingDataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ProjectName}-training-data-${AWS::AccountId}"
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  # ECR Repository for Docker images
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub "${ProjectName}"
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 10 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+  # IAM Role for Batch Job execution
+  BatchJobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-batch-job-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: S3AccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub "${TrainingDataBucket}/*"
+                  - !GetAtt TrainingDataBucket.Arn
+        - PolicyName: CloudWatchLogsPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+
+  # IAM Role for Batch Service
+  BatchServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-batch-service-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: batch.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole
+
+  # IAM Role for EC2 Instance Profile
+  ECSInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-ecs-instance-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+
+  # Instance Profile for ECS Instances
+  ECSInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref ECSInstanceRole
+
+  # Security Group for Batch Compute Environment
+  BatchSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for AWS Batch compute environment
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  # Batch Compute Environment for GPU instances
+  BatchComputeEnvironmentGPU:
+    Type: AWS::Batch::ComputeEnvironment
+    Properties:
+      ComputeEnvironmentName: !Sub "${ProjectName}-gpu-compute-env"
+      Type: MANAGED
+      State: ENABLED
+      ServiceRole: !GetAtt BatchServiceRole.Arn
+      ComputeResources:
+        Type: EC2
+        MinvCpus: !Ref MinvCpus
+        MaxvCpus: !Ref MaxvCpus
+        DesiredvCpus: 0
+        InstanceTypes:
+          - p3.2xlarge
+          - p3.8xlarge
+          - g4dn.xlarge
+          - g4dn.2xlarge
+        Subnets: !Ref SubnetIds
+        SecurityGroupIds:
+          - !Ref BatchSecurityGroup
+        InstanceRole: !GetAtt ECSInstanceProfile.Arn
+        Tags:
+          Project: !Ref ProjectName
+          Environment: training
+
+  # Batch Compute Environment for CPU instances (fallback)
+  BatchComputeEnvironmentCPU:
+    Type: AWS::Batch::ComputeEnvironment
+    Properties:
+      ComputeEnvironmentName: !Sub "${ProjectName}-cpu-compute-env"
+      Type: MANAGED
+      State: ENABLED
+      ServiceRole: !GetAtt BatchServiceRole.Arn
+      ComputeResources:
+        Type: EC2
+        MinvCpus: !Ref MinvCpus
+        MaxvCpus: !Ref MaxvCpus
+        DesiredvCpus: 0
+        InstanceTypes:
+          - c5.large
+          - c5.xlarge
+          - c5.2xlarge
+          - c5.4xlarge
+        Subnets: !Ref SubnetIds
+        SecurityGroupIds:
+          - !Ref BatchSecurityGroup
+        InstanceRole: !GetAtt ECSInstanceProfile.Arn
+        Tags:
+          Project: !Ref ProjectName
+          Environment: training
+
+  # Batch Job Queue for GPU training
+  BatchJobQueueGPU:
+    Type: AWS::Batch::JobQueue
+    Properties:
+      JobQueueName: !Sub "${ProjectName}-gpu-queue"
+      State: ENABLED
+      Priority: 100
+      ComputeEnvironmentOrder:
+        - Order: 1
+          ComputeEnvironment: !Ref BatchComputeEnvironmentGPU
+
+  # Batch Job Queue for CPU training
+  BatchJobQueueCPU:
+    Type: AWS::Batch::JobQueue
+    Properties:
+      JobQueueName: !Sub "${ProjectName}-cpu-queue"
+      State: ENABLED
+      Priority: 50
+      ComputeEnvironmentOrder:
+        - Order: 1
+          ComputeEnvironment: !Ref BatchComputeEnvironmentCPU
+
+  # CloudWatch Log Group for training logs
+  TrainingLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/batch/${ProjectName}"
+      RetentionInDays: 30
+
+Outputs:
+  S3BucketName:
+    Description: Name of the S3 bucket for training data
+    Value: !Ref TrainingDataBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-S3Bucket"
+
+  ECRRepositoryURI:
+    Description: URI of the ECR repository
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepository}"
+    Export:
+      Name: !Sub "${AWS::StackName}-ECRRepository"
+
+  BatchJobQueueGPU:
+    Description: Name of the GPU job queue
+    Value: !Ref BatchJobQueueGPU
+    Export:
+      Name: !Sub "${AWS::StackName}-GPUJobQueue"
+
+  BatchJobQueueCPU:
+    Description: Name of the CPU job queue
+    Value: !Ref BatchJobQueueCPU
+    Export:
+      Name: !Sub "${AWS::StackName}-CPUJobQueue"
+
+  BatchJobRoleArn:
+    Description: ARN of the Batch job execution role
+    Value: !GetAtt BatchJobRole.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-JobRoleArn"

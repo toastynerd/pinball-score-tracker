@@ -1,0 +1,48 @@
+{
+  "jobDefinitionName": "pinball-ocr-training-gpu",
+  "type": "container",
+  "platformCapabilities": ["EC2"],
+  "containerProperties": {
+    "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/pinball-ocr-training:latest",
+    "vcpus": 4,
+    "memory": 16384,
+    "resourceRequirements": [
+      {
+        "type": "GPU",
+        "value": "1"
+      }
+    ],
+    "jobRoleArn": "arn:aws:iam::ACCOUNT_ID:role/pinball-ocr-training-batch-job-role",
+    "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/pinball-ocr-training-batch-job-role",
+    "environment": [
+      {
+        "name": "CUDA_VISIBLE_DEVICES",
+        "value": "0"
+      },
+      {
+        "name": "PYTHONPATH",
+        "value": "/app"
+      },
+      {
+        "name": "S3_BUCKET",
+        "value": "pinball-ocr-training-training-data-ACCOUNT_ID"
+      }
+    ],
+    "mountPoints": [],
+    "volumes": [],
+    "ulimits": [],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/aws/batch/pinball-ocr-training",
+        "awslogs-region": "REGION"
+      }
+    }
+  },
+  "retryStrategy": {
+    "attempts": 3
+  },
+  "timeout": {
+    "attemptDurationSeconds": 14400
+  }
+}

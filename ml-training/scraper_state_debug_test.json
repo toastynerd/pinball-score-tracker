@@ -1,0 +1,16 @@
+{
+  "session_start": "2025-05-23T15:13:41.942230",
+  "total_matches_processed": 0,
+  "total_games_collected": 0,
+  "total_images_downloaded": 0,
+  "last_processed_match": null,
+  "completed_matches": [],
+  "failed_matches": [],
+  "statistics": {
+    "games_with_data": 0,
+    "games_without_data": 1,
+    "images_collected": 0,
+    "total_requests_made": 1
+  },
+  "last_updated": "2025-05-23T15:14:11.549265"
+}
