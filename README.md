@@ -63,11 +63,29 @@ python -m pytest tests/ -v
 
 ### 1. Data Collection
 
-Collect pinball score photos with ground truth data:
+The project includes specialized web scrapers to collect pinball score photos with ground truth data:
+
+#### Web Scrapers
+
+**Basic HTTP Scraper (`scrape_mnp_data.py`)**
+- Uses requests and BeautifulSoup for static content
+- Extracts match and game links from Monday Night Pinball
+- Constructs game URLs when links aren't explicitly found
+- Handles image downloading with proper error handling
+
+**Selenium-based Scraper (`scrape_mnp_selenium.py`)**
+- Handles JavaScript-heavy dynamic content
+- Captures canvas-rendered images (actual score photos)
+- Extracts scores from JavaScript variables
+- Supports headless Chrome operation for CI/automation
+- Downloads both regular URLs and data URL images (base64)
 
 ```bash
-# Scrape data from Monday Night Pinball (with Selenium for dynamic content)
+# Scrape data from Monday Night Pinball (dynamic content with real score images)
 python scripts/scrape_mnp_selenium.py
+
+# Alternative: Basic scraper for static content
+python scripts/scrape_mnp_data.py
 
 # Filter out blank/invalid images
 python scripts/filter_valid_images.py
@@ -109,8 +127,19 @@ python scripts/train_model.py
 ### Data Flow
 
 ```
-Pinball Photos → PaddleOCR → Score Detection → Validation → Database
+Monday Night Pinball → Selenium Scraper → Canvas Images + JS Scores → 
+Image Filtering → PaddleOCR Training Data → Model Training → Score Detection
 ```
+
+### Scraping Architecture
+
+The data collection system handles the complexity of modern web applications:
+
+1. **Static Content**: Basic scraper extracts match structures and game URLs
+2. **Dynamic Content**: Selenium scraper handles JavaScript-rendered score photos
+3. **Ground Truth**: Scores extracted from JavaScript variables for supervised learning
+4. **Image Processing**: Canvas-to-image conversion for training data
+5. **Quality Control**: Automated filtering of blank/corrupted images
 
 ## Development
 
