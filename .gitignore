@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Data and models
+ml-training/data/
+ml-training/models/
+*.h5
+*.pkl
+*.pth
+*.onnx
+
+# Virtual environments
+ml-training/venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# AWS credentials
+.aws/
+*.pem
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Chrome driver
+chromedriver*
+
+# Selenium screenshots
+screenshot*.png
+
+# Temporary files
+*.tmp
+*.temp
