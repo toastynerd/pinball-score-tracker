@@ -13,7 +13,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
 class TestMNPScraper:
     
-    def test_scraper_initialization(self):
+    @patch('scrape_mnp_data.requests.Session')
+    def test_scraper_initialization(self, mock_session):
         """Test basic scraper initialization"""
         from scrape_mnp_data import MNPScraper
         
@@ -74,9 +75,15 @@ class TestSeleniumScraper:
             mock_chrome.return_value = driver
             yield driver
     
-    def test_is_game_image_filtering(self):
+    @patch('scrape_mnp_selenium.ChromeDriverManager')
+    @patch('scrape_mnp_selenium.webdriver.Chrome')
+    def test_is_game_image_filtering(self, mock_chrome, mock_cdm):
         """Test game image filtering logic"""
         from scrape_mnp_selenium import MNPSeleniumScraper
+        
+        mock_driver = Mock()
+        mock_chrome.return_value = mock_driver
+        mock_cdm.return_value.install.return_value = "/path/to/driver"
         
         scraper = MNPSeleniumScraper()
         
@@ -111,30 +118,40 @@ class TestSeleniumScraper:
 
 class TestImageDownloading:
     
-    @patch('scrape_mnp_data.requests.Session.get')
-    def test_download_regular_image(self, mock_get):
+    def test_download_regular_image(self):
         """Test downloading regular HTTP images"""
         from scrape_mnp_data import MNPScraper
         
-        # Mock response
-        mock_response = Mock()
-        mock_response.content = b"fake image data"
-        mock_response.raise_for_status = Mock()
-        mock_get.return_value = mock_response
-        
-        scraper = MNPScraper()
-        
-        import tempfile
-        with tempfile.TemporaryDirectory() as temp_dir:
-            result = scraper.download_image("https://example.com/image.jpg", temp_dir)
+        with patch('scrape_mnp_data.requests.Session') as mock_session_class:
+            # Mock session instance
+            mock_session = Mock()
+            mock_session_class.return_value = mock_session
             
-            assert result is not None
-            assert "image.jpg" in result
-            assert os.path.exists(result)
+            # Mock response
+            mock_response = Mock()
+            mock_response.content = b"fake image data"
+            mock_response.raise_for_status = Mock()
+            mock_session.get.return_value = mock_response
+            
+            scraper = MNPScraper()
+            
+            import tempfile
+            with tempfile.TemporaryDirectory() as temp_dir:
+                result = scraper.download_image("https://example.com/image.jpg", temp_dir)
+                
+                assert result is not None
+                assert "image.jpg" in result
+                assert os.path.exists(result)
     
-    def test_download_data_url_image(self):
+    @patch('scrape_mnp_selenium.ChromeDriverManager')
+    @patch('scrape_mnp_selenium.webdriver.Chrome')
+    def test_download_data_url_image(self, mock_chrome, mock_cdm):
         """Test downloading data URL images (canvas)"""
         from scrape_mnp_selenium import MNPSeleniumScraper
+        
+        mock_driver = Mock()
+        mock_chrome.return_value = mock_driver
+        mock_cdm.return_value.install.return_value = "/path/to/driver"
         
         scraper = MNPSeleniumScraper()
         
