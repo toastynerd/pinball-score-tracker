@@ -21,43 +21,17 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libgl1-mesa-glx libglib2.0-0 libglib2.0-dev
-    
-    - name: Cache pip dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-test.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-    
     - name: Install dependencies
       working-directory: ./ml-training
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-test.txt
     
-    - name: Debug environment
-      working-directory: ./ml-training
-      run: |
-        python --version
-        pip list
-        python -c "import sys; print('Python path:', sys.path)"
-        ls -la
-    
-    - name: Run basic tests first
-      working-directory: ./ml-training
-      run: |
-        python -m pytest tests/test_basic.py -v
-    
-    - name: Run all tests with pytest
+    - name: Run tests with pytest
       working-directory: ./ml-training
       run: |
         export PYTHONPATH="${PYTHONPATH}:$(pwd)"
-        python -m pytest tests/ -v --tb=long
+        python -m pytest tests/ -v
     
     - name: Run tests with coverage
       working-directory: ./ml-training

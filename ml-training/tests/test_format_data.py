@@ -82,11 +82,12 @@ class TestPaddleOCRFormatter:
             images_dir = os.path.join(input_dir, "images")
             os.makedirs(images_dir)
             
-            # Create dummy image
-            from PIL import Image
-            img = Image.new('RGB', (100, 100), (255, 255, 255))
+            # Create dummy image file
             img_path = os.path.join(images_dir, "test.png")
-            img.save(img_path)
+            with open(img_path, 'wb') as f:
+                # Write a minimal PNG file
+                png_header = b'\x89PNG\r\n\x1a\n'
+                f.write(png_header + b'0' * 100)
             
             # Create filtered metadata
             metadata = [{
