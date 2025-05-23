@@ -1,7 +1,7 @@
 # Pinball Score Tracker
 
-[![Run Tests](https://github.com/toasty/pinball-score-tracker/actions/workflows/test.yml/badge.svg)](https://github.com/toasty/pinball-score-tracker/actions/workflows/test.yml)
-[![Code Quality](https://github.com/toasty/pinball-score-tracker/actions/workflows/lint.yml/badge.svg)](https://github.com/toasty/pinball-score-tracker/actions/workflows/lint.yml)
+[![Run Tests](https://github.com/toastynerd/pinball-score-tracker/actions/workflows/test.yml/badge.svg)](https://github.com/toastynerd/pinball-score-tracker/actions/workflows/test.yml)
+[![Code Quality](https://github.com/toastynerd/pinball-score-tracker/actions/workflows/lint.yml/badge.svg)](https://github.com/toastynerd/pinball-score-tracker/actions/workflows/lint.yml)
 
 A way to track your pinball scores using AI-powered computer vision! This system automatically extracts scores from pinball machine photos without requiring manual entry.
 
@@ -39,7 +39,7 @@ pinball-score-tracker/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/pinball-score-tracker.git
+git clone https://github.com/toastynerd/pinball-score-tracker.git
 cd pinball-score-tracker
 ```
 
