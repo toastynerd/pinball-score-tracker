@@ -230,8 +230,9 @@ class PersistentScraper:
                         logger.info(f"    ✓ Found scores: {scores}")
 
                         # Download images
+                        images_list = game_data.get("images", [])
                         valid_images = []
-                        for img_idx, img_url in enumerate(game_data.get("images", [])):
+                        for img_idx, img_url in enumerate(images_list):
                             if self.selenium_scraper.is_game_image(img_url):
                                 filename = f"match_{self.state['total_matches_processed'] + 1}_game_{game_idx + 1}_img_{img_idx + 1}.png"
                                 local_path = self.selenium_scraper.download_image(
@@ -246,7 +247,7 @@ class PersistentScraper:
                             match_data.append(game_data)
                             games_with_data += 1
                             self.state["statistics"]["games_with_data"] += 1
-                            logger.info(f"    ✓ Collected {len(valid_images)} images")
+                            logger.debug(f"    ✓ Collected {len(valid_images)} images")
                         else:
                             self.state["statistics"]["games_without_data"] += 1
                     else:

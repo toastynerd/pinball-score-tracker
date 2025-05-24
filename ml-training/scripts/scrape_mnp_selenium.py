@@ -131,6 +131,11 @@ class MNPSeleniumScraper:
         if not img_src:
             return False
 
+        # IMPORTANT: Check data URLs FIRST before other patterns
+        # Canvas-rendered game images are always data URLs
+        if img_src.startswith("data:image"):
+            return True
+
         # Skip common UI images
         ui_patterns = ["icon", "logo", "check", "button", "ui", "header", "footer"]
         src_lower = img_src.lower()
@@ -139,12 +144,8 @@ class MNPSeleniumScraper:
             return False
 
         # Look for game/upload patterns
-        game_patterns = ["upload", "game", "photo", "image", "score"]
+        game_patterns = ["upload", "game", "photo", "score"]
         if any(pattern in src_lower for pattern in game_patterns):
-            return True
-
-        # Include data URLs (canvas images)
-        if img_src.startswith("data:image"):
             return True
 
         return False
@@ -152,6 +153,9 @@ class MNPSeleniumScraper:
     def download_image(self, img_url, save_dir, filename=None):
         """Download image from URL or save data URL"""
         try:
+            # Ensure save directory exists
+            os.makedirs(save_dir, exist_ok=True)
+            
             if img_url.startswith("data:image"):
                 # Handle data URLs
                 if not filename:
@@ -185,6 +189,9 @@ class MNPSeleniumScraper:
 
         except Exception as e:
             logger.error(f"Failed to download {img_url}: {e}")
+            logger.error(f"Error type: {type(e).__name__}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return None
 
     def scrape_sample_games(self, game_urls, output_dir="data/selenium_dataset"):
