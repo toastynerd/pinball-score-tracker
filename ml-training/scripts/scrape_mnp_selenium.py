@@ -35,24 +35,49 @@ class MNPSeleniumScraper:
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--window-size=1920,1080")
-
+        # Add stability options to prevent crashes
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-plugins")
+        chrome_options.add_argument("--disable-images")
+        chrome_options.add_argument("--memory-pressure-off")
+        
         service = Service(ChromeDriverManager().install())
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        # Set explicit timeouts to prevent hanging
+        self.driver.set_page_load_timeout(20)  # 20 seconds max page load
         self.driver.implicitly_wait(10)
 
     def scrape_game_with_selenium(self, game_url):
         """Scrape game data using Selenium to handle JavaScript"""
         try:
+            # Check if driver session is still valid
+            if not self._is_driver_alive():
+                logger.warning("Driver session invalid, recreating...")
+                self._recreate_driver()
+                
             logger.info(f"Loading page: {game_url}")
-            self.driver.get(game_url)
+            start_time = time.time()
+            
+            # Load page with timeout handling
+            try:
+                self.driver.get(game_url)
+            except Exception as e:
+                load_time = time.time() - start_time
+                logger.warning(f"Page load failed after {load_time:.1f}s: {e}")
+                return None
 
-            # Wait for page to load
-            WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.TAG_NAME, "body"))
-            )
+            # Wait for page to load with shorter timeout
+            try:
+                WebDriverWait(self.driver, 10).until(
+                    EC.presence_of_element_located((By.TAG_NAME, "body"))
+                )
+            except Exception as wait_error:
+                load_time = time.time() - start_time
+                logger.warning(f"Page elements not found after {load_time:.1f}s, skipping game")
+                return None
 
-            # Additional wait for dynamic content
-            time.sleep(3)
+            # Shorter wait for dynamic content to prevent hanging on slow pages
+            time.sleep(2)
 
             game_data = {
                 "url": game_url,
@@ -117,13 +142,24 @@ class MNPSeleniumScraper:
             if js_data:
                 game_data["js_data"] = js_data
 
+            load_time = time.time() - start_time
             logger.info(
-                f"Found {len(game_data['images'])} images, {len(game_data['scores'])} scores"
+                f"Found {len(game_data['images'])} images, {len(game_data['scores'])} scores (loaded in {load_time:.1f}s)"
             )
+            
+            # Skip games with no useful data after reasonable time
+            if not game_data['images'] and not game_data['scores'] and load_time > 15:
+                logger.warning(f"Skipping empty game after {load_time:.1f}s (no images or scores)")
+                return None
+                
             return game_data
 
         except Exception as e:
             logger.error(f"Error scraping {game_url}: {e}")
+            # Check if it's a session error and try to recover
+            if "invalid session id" in str(e) or "session deleted" in str(e):
+                logger.warning("Session error detected, recreating driver...")
+                self._recreate_driver()
             return None
 
     def is_game_image(self, img_src):
@@ -228,10 +264,36 @@ class MNPSeleniumScraper:
         logger.info(f"Scraping complete. Collected {len(all_game_data)} games")
         return all_game_data
 
+    def _is_driver_alive(self):
+        """Check if the driver session is still alive"""
+        try:
+            # Try multiple simple operations to check if session is valid
+            current_url = self.driver.current_url
+            window_handles = self.driver.window_handles
+            return len(window_handles) > 0
+        except Exception as e:
+            logger.debug(f"Driver health check failed: {e}")
+            return False
+            
+    def _recreate_driver(self):
+        """Recreate the driver after a session failure"""
+        try:
+            if hasattr(self, "driver"):
+                self.driver.quit()
+        except Exception:
+            pass  # Ignore errors when cleaning up broken driver
+            
+        logger.info("Recreating Chrome driver...")
+        self.setup_driver()
+        logger.info("Driver recreated successfully")
+    
     def close(self):
         """Clean up the driver"""
         if hasattr(self, "driver"):
-            self.driver.quit()
+            try:
+                self.driver.quit()
+            except Exception:
+                pass  # Ignore errors during cleanup
 
 
 if __name__ == "__main__":

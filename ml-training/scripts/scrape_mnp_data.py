@@ -30,7 +30,7 @@ class MNPScraper:
     def get_match_links(self):
         """Extract all match links from matches page"""
         url = f"{self.base_url}/matches"
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=30)
         soup = BeautifulSoup(response.content, "html.parser")
 
         # Find all match links
@@ -46,7 +46,7 @@ class MNPScraper:
 
     def get_game_links_from_match(self, match_url):
         """Extract individual game links from a match page"""
-        response = self.session.get(match_url)
+        response = self.session.get(match_url, timeout=30)
         soup = BeautifulSoup(response.content, "html.parser")
 
         game_links = []
@@ -75,7 +75,7 @@ class MNPScraper:
     def scrape_game_data(self, game_url):
         """Extract images and scores from a game page"""
         try:
-            response = self.session.get(game_url)
+            response = self.session.get(game_url, timeout=30)
 
             # Check if page exists
             if response.status_code != 200:
@@ -132,7 +132,7 @@ class MNPScraper:
     def download_image(self, img_url, save_dir):
         """Download an image from URL"""
         try:
-            response = self.session.get(img_url)
+            response = self.session.get(img_url, timeout=30)
             response.raise_for_status()
 
             # Generate filename from URL
