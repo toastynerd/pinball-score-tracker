@@ -80,7 +80,9 @@ class PinballOCREvaluator:
     def calculate_edit_distance(self, pred: str, true: str) -> int:
         """Calculate Levenshtein distance between predictions and ground truth"""
         return (
-            len(pred) + len(true) - 2 * len(SequenceMatcher(None, pred, true).get_matching_blocks())
+            len(pred)
+            + len(true)
+            - 2 * len(SequenceMatcher(None, pred, true).get_matching_blocks())
         )
 
     def evaluate_single_image(self, image_path: str, ground_truth: str) -> Dict:
@@ -128,12 +130,16 @@ class PinballOCREvaluator:
 
             # Calculate metrics
             exact_match = pred_normalized == true_normalized
-            edit_distance = self.calculate_edit_distance(pred_normalized, true_normalized)
+            edit_distance = self.calculate_edit_distance(
+                pred_normalized, true_normalized
+            )
 
             # Character-level accuracy
             char_accuracy = 0.0
             if true_normalized:
-                correct_chars = sum(1 for p, t in zip(pred_normalized, true_normalized) if p == t)
+                correct_chars = sum(
+                    1 for p, t in zip(pred_normalized, true_normalized) if p == t
+                )
                 char_accuracy = correct_chars / len(true_normalized)
 
             return {
@@ -160,7 +166,9 @@ class PinballOCREvaluator:
                 "error": str(e),
             }
 
-    def evaluate_dataset(self, test_data_path: str, metadata_file: str) -> EvaluationMetrics:
+    def evaluate_dataset(
+        self, test_data_path: str, metadata_file: str
+    ) -> EvaluationMetrics:
         """
         Evaluate model on entire test dataset
 
@@ -208,13 +216,19 @@ class PinballOCREvaluator:
         )
 
         metrics = EvaluationMetrics(
-            exact_match_accuracy=exact_matches / total_samples if total_samples > 0 else 0.0,
+            exact_match_accuracy=(
+                exact_matches / total_samples if total_samples > 0 else 0.0
+            ),
             character_accuracy=(
                 correct_characters / total_characters if total_characters > 0 else 0.0
             ),
             word_accuracy=exact_matches / total_samples if total_samples > 0 else 0.0,
-            edit_distance_avg=total_edit_distance / total_samples if total_samples > 0 else 0.0,
-            confidence_avg=total_confidence / total_samples if total_samples > 0 else 0.0,
+            edit_distance_avg=(
+                total_edit_distance / total_samples if total_samples > 0 else 0.0
+            ),
+            confidence_avg=(
+                total_confidence / total_samples if total_samples > 0 else 0.0
+            ),
             total_samples=total_samples,
             correct_exact_matches=exact_matches,
             total_characters=int(total_characters),
@@ -294,7 +308,9 @@ class PinballOCREvaluator:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate PaddleOCR model on pinball score data")
+    parser = argparse.ArgumentParser(
+        description="Evaluate PaddleOCR model on pinball score data"
+    )
     parser.add_argument("test_data", help="Path to test images directory")
     parser.add_argument("metadata", help="Path to metadata JSON file with ground truth")
     parser.add_argument("--model-path", help="Path to trained model directory")

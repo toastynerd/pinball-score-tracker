@@ -76,7 +76,10 @@ class PinballImagePreprocessor:
         return cv2.filter2D(image, -1, kernel)
 
     def preprocess_single_image(
-        self, image_path: str, apply_denoising: bool = True, apply_sharpening: bool = True
+        self,
+        image_path: str,
+        apply_denoising: bool = True,
+        apply_sharpening: bool = True,
     ) -> np.ndarray:
         """
         Preprocess a single image
@@ -139,7 +142,9 @@ class PinballImagePreprocessor:
 
         # Get image files
         image_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".tiff"}
-        image_files = [f for f in input_path.iterdir() if f.suffix.lower() in image_extensions]
+        image_files = [
+            f for f in input_path.iterdir() if f.suffix.lower() in image_extensions
+        ]
 
         stats = {
             "total_images": len(image_files),
@@ -170,11 +175,15 @@ class PinballImagePreprocessor:
                 stats["processed_successfully"] += 1
 
                 if stats["processed_successfully"] % 100 == 0:
-                    logger.info(f"Processed {stats['processed_successfully']} images...")
+                    logger.info(
+                        f"Processed {stats['processed_successfully']} images..."
+                    )
 
             except Exception as e:
                 logger.error(f"Failed to process {image_file.name}: {e}")
-                stats["failed_images"].append({"filename": image_file.name, "error": str(e)})
+                stats["failed_images"].append(
+                    {"filename": image_file.name, "error": str(e)}
+                )
 
         logger.info(
             f"Preprocessing complete: {stats['processed_successfully']}/{stats['total_images']} successful"
@@ -189,25 +198,35 @@ class PinballImagePreprocessor:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Preprocess pinball score images for OCR training")
+    parser = argparse.ArgumentParser(
+        description="Preprocess pinball score images for OCR training"
+    )
     parser.add_argument("input_dir", help="Input directory containing images")
     parser.add_argument("output_dir", help="Output directory for preprocessed images")
     parser.add_argument("--metadata", help="Path to metadata JSON file")
-    parser.add_argument("--height", type=int, default=32, help="Target height (default: 32)")
+    parser.add_argument(
+        "--height", type=int, default=32, help="Target height (default: 32)"
+    )
     parser.add_argument(
         "--width", type=int, help="Target width (maintains aspect ratio if not set)"
     )
     parser.add_argument("--no-denoise", action="store_true", help="Skip denoising step")
-    parser.add_argument("--no-sharpen", action="store_true", help="Skip sharpening step")
+    parser.add_argument(
+        "--no-sharpen", action="store_true", help="Skip sharpening step"
+    )
 
     args = parser.parse_args()
 
     # Initialize preprocessor
-    preprocessor = PinballImagePreprocessor(target_height=args.height, target_width=args.width)
+    preprocessor = PinballImagePreprocessor(
+        target_height=args.height, target_width=args.width
+    )
 
     # Process dataset
     stats = preprocessor.preprocess_dataset(
-        input_dir=args.input_dir, output_dir=args.output_dir, metadata_file=args.metadata
+        input_dir=args.input_dir,
+        output_dir=args.output_dir,
+        metadata_file=args.metadata,
     )
 
     print(f"Preprocessing complete!")

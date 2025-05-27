@@ -89,7 +89,9 @@ class ModelVersioningSystem:
         if self.s3_bucket:
             try:
                 self.s3_client.upload_file(
-                    str(self.registry_file), self.s3_bucket, f"{self.s3_prefix}/model_registry.json"
+                    str(self.registry_file),
+                    self.s3_bucket,
+                    f"{self.s3_prefix}/model_registry.json",
                 )
             except Exception as e:
                 logger.warning(f"Failed to sync registry to S3: {e}")
@@ -174,7 +176,9 @@ class ModelVersioningSystem:
         # Calculate metadata
         model_hash = self._calculate_directory_hash(model_path)
         model_size = self._get_directory_size_mb(model_path)
-        file_list = [str(p.relative_to(model_path)) for p in model_path.rglob("*") if p.is_file()]
+        file_list = [
+            str(p.relative_to(model_path)) for p in model_path.rglob("*") if p.is_file()
+        ]
 
         # Create metadata
         metadata = ModelMetadata(
@@ -273,7 +277,9 @@ class ModelVersioningSystem:
         """Get detailed information about a model"""
         return self.registry["models"].get(model_id)
 
-    def download_model(self, model_id: str, output_dir: str, force: bool = False) -> str:
+    def download_model(
+        self, model_id: str, output_dir: str, force: bool = False
+    ) -> str:
         """
         Download model to local directory
 
@@ -306,7 +312,9 @@ class ModelVersioningSystem:
             archive_path = Path(output_dir) / f"{model_id}.tar.gz"
 
             try:
-                logger.info(f"Downloading model from S3: s3://{self.s3_bucket}/{s3_key}")
+                logger.info(
+                    f"Downloading model from S3: s3://{self.s3_bucket}/{s3_key}"
+                )
                 self.s3_client.download_file(self.s3_bucket, s3_key, str(archive_path))
 
                 # Extract archive
@@ -361,7 +369,11 @@ class ModelVersioningSystem:
             for metric in set(model1["metrics"].keys()) | set(model2["metrics"].keys()):
                 val1 = model1["metrics"].get(metric, 0)
                 val2 = model2["metrics"].get(metric, 0)
-                metrics_diff[metric] = {"model1": val1, "model2": val2, "improvement": val2 - val1}
+                metrics_diff[metric] = {
+                    "model1": val1,
+                    "model2": val2,
+                    "improvement": val2 - val1,
+                }
             comparison["metrics_comparison"] = metrics_diff
 
         return comparison
@@ -415,7 +427,8 @@ class ModelVersioningSystem:
 def main():
     parser = argparse.ArgumentParser(description="Model versioning system")
     parser.add_argument(
-        "command", choices=["register", "list", "info", "download", "compare", "tag", "delete"]
+        "command",
+        choices=["register", "list", "info", "download", "compare", "tag", "delete"],
     )
     parser.add_argument("--model-dir", help="Model directory to register")
     parser.add_argument("--model-id", help="Model ID")
@@ -423,12 +436,16 @@ def main():
     parser.add_argument("--name", help="Model name")
     parser.add_argument("--description", default="", help="Model description")
     parser.add_argument("--version", help="Model version")
-    parser.add_argument("--output-dir", default="downloaded_models", help="Output directory")
+    parser.add_argument(
+        "--output-dir", default="downloaded_models", help="Output directory"
+    )
     parser.add_argument("--tags", nargs="*", help="Model tags")
     parser.add_argument("--s3-bucket", help="S3 bucket for remote storage")
     parser.add_argument("--base-dir", default="models", help="Local base directory")
     parser.add_argument("--force", action="store_true", help="Force operation")
-    parser.add_argument("--confirm", action="store_true", help="Confirm destructive operations")
+    parser.add_argument(
+        "--confirm", action="store_true", help="Confirm destructive operations"
+    )
 
     args = parser.parse_args()
 
@@ -452,7 +469,9 @@ def main():
         models = versioning.list_models()
         print(f"Found {len(models)} models:")
         for model in models:
-            print(f"  {model['model_id']} - {model['name']} ({model['model_size_mb']:.2f} MB)")
+            print(
+                f"  {model['model_id']} - {model['name']} ({model['model_size_mb']:.2f} MB)"
+            )
             print(f"    Created: {model['created_at']}")
             print(f"    Tags: {', '.join(model['tags'])}")
             print()

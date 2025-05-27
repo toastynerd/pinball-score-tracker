@@ -40,7 +40,7 @@ class MNPSeleniumScraper:
         chrome_options.add_argument("--disable-plugins")
         chrome_options.add_argument("--disable-images")
         chrome_options.add_argument("--memory-pressure-off")
-        
+
         service = Service(ChromeDriverManager().install())
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
         # Set explicit timeouts to prevent hanging
@@ -54,10 +54,10 @@ class MNPSeleniumScraper:
             if not self._is_driver_alive():
                 logger.warning("Driver session invalid, recreating...")
                 self._recreate_driver()
-                
+
             logger.info(f"Loading page: {game_url}")
             start_time = time.time()
-            
+
             # Load page with timeout handling
             try:
                 self.driver.get(game_url)
@@ -73,7 +73,9 @@ class MNPSeleniumScraper:
                 )
             except Exception as wait_error:
                 load_time = time.time() - start_time
-                logger.warning(f"Page elements not found after {load_time:.1f}s, skipping game")
+                logger.warning(
+                    f"Page elements not found after {load_time:.1f}s, skipping game"
+                )
                 return None
 
             # Shorter wait for dynamic content to prevent hanging on slow pages
@@ -114,9 +116,13 @@ class MNPSeleniumScraper:
             )
             for input_elem in score_inputs:
                 value = input_elem.get_attribute("value")
-                name = input_elem.get_attribute("name") or input_elem.get_attribute("id")
+                name = input_elem.get_attribute("name") or input_elem.get_attribute(
+                    "id"
+                )
                 if value and value.isdigit():
-                    game_data["scores"].append({"value": value, "name": name, "type": "number"})
+                    game_data["scores"].append(
+                        {"value": value, "name": name, "type": "number"}
+                    )
 
             # Look for player names
             player_inputs = self.driver.find_elements(
@@ -146,12 +152,14 @@ class MNPSeleniumScraper:
             logger.info(
                 f"Found {len(game_data['images'])} images, {len(game_data['scores'])} scores (loaded in {load_time:.1f}s)"
             )
-            
+
             # Skip games with no useful data after reasonable time
-            if not game_data['images'] and not game_data['scores'] and load_time > 15:
-                logger.warning(f"Skipping empty game after {load_time:.1f}s (no images or scores)")
+            if not game_data["images"] and not game_data["scores"] and load_time > 15:
+                logger.warning(
+                    f"Skipping empty game after {load_time:.1f}s (no images or scores)"
+                )
                 return None
-                
+
             return game_data
 
         except Exception as e:
@@ -191,7 +199,7 @@ class MNPSeleniumScraper:
         try:
             # Ensure save directory exists
             os.makedirs(save_dir, exist_ok=True)
-            
+
             if img_url.startswith("data:image"):
                 # Handle data URLs
                 if not filename:
@@ -214,7 +222,10 @@ class MNPSeleniumScraper:
 
                 if not filename:
                     parsed_url = urlparse(img_url)
-                    filename = os.path.basename(parsed_url.path) or f"image_{hash(img_url)}.jpg"
+                    filename = (
+                        os.path.basename(parsed_url.path)
+                        or f"image_{hash(img_url)}.jpg"
+                    )
 
                 filepath = os.path.join(save_dir, filename)
 
@@ -227,6 +238,7 @@ class MNPSeleniumScraper:
             logger.error(f"Failed to download {img_url}: {e}")
             logger.error(f"Error type: {type(e).__name__}")
             import traceback
+
             logger.error(f"Traceback: {traceback.format_exc()}")
             return None
 
@@ -247,7 +259,9 @@ class MNPSeleniumScraper:
             # Download images
             for j, img_url in enumerate(game_data["images"]):
                 filename = f"game_{i+1}_img_{j+1}.png"
-                local_path = self.download_image(img_url, f"{output_dir}/images", filename)
+                local_path = self.download_image(
+                    img_url, f"{output_dir}/images", filename
+                )
                 if local_path:
                     game_data["local_images"] = game_data.get("local_images", [])
                     game_data["local_images"].append(local_path)
@@ -274,7 +288,7 @@ class MNPSeleniumScraper:
         except Exception as e:
             logger.debug(f"Driver health check failed: {e}")
             return False
-            
+
     def _recreate_driver(self):
         """Recreate the driver after a session failure"""
         try:
@@ -282,11 +296,11 @@ class MNPSeleniumScraper:
                 self.driver.quit()
         except Exception:
             pass  # Ignore errors when cleaning up broken driver
-            
+
         logger.info("Recreating Chrome driver...")
         self.setup_driver()
         logger.info("Driver recreated successfully")
-    
+
     def close(self):
         """Clean up the driver"""
         if hasattr(self, "driver"):

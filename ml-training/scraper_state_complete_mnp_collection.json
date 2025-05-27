@@ -1,0 +1,23 @@
+{
+  "session_start": "2025-05-23T15:16:38.113684",
+  "total_matches_processed": 6,
+  "total_games_collected": 16,
+  "total_images_downloaded": 0,
+  "last_processed_match": "https://www.mondaynightpinball.com/matches/mnp-21-1-BAD-RMS",
+  "completed_matches": [
+    "https://www.mondaynightpinball.com/matches/mnp-21-1-ADB-JMF",
+    "https://www.mondaynightpinball.com/matches/mnp-21-1-ADB-JMF?round=1",
+    "https://www.mondaynightpinball.com/matches/mnp-21-1-ADB-JMF?round=2",
+    "https://www.mondaynightpinball.com/matches/mnp-21-1-ADB-JMF?round=3",
+    "https://www.mondaynightpinball.com/matches/mnp-21-1-ADB-JMF?round=4",
+    "https://www.mondaynightpinball.com/matches/mnp-21-1-BAD-RMS"
+  ],
+  "failed_matches": [],
+  "statistics": {
+    "games_with_data": 16,
+    "games_without_data": 132,
+    "images_collected": 16,
+    "total_requests_made": 148
+  },
+  "last_updated": "2025-05-24T08:45:10.180844"
+}

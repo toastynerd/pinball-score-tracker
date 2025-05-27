@@ -46,7 +46,12 @@ class TestPinballOCRTrainer:
         from train_model import PinballOCRTrainer
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            config = {"paths": {"output_dir": f"{temp_dir}/output", "log_dir": f"{temp_dir}/logs"}}
+            config = {
+                "paths": {
+                    "output_dir": f"{temp_dir}/output",
+                    "log_dir": f"{temp_dir}/logs",
+                }
+            }
 
             with patch("train_model.PinballOCRTrainer.load_config") as mock_load:
                 mock_load.return_value = config
@@ -76,11 +81,11 @@ class TestPinballOCRTrainer:
             char_dict = os.path.join(temp_dir, "dict.txt")
 
             with open(train_list, "w", encoding="utf-8") as f:
-                f.write("image1.jpg\t[{\"transcription\": \"123,456\"}]\n")
-                f.write("image2.jpg\t[{\"transcription\": \"789,012\"}]\n")
+                f.write('image1.jpg\t[{"transcription": "123,456"}]\n')
+                f.write('image2.jpg\t[{"transcription": "789,012"}]\n')
 
             with open(val_list, "w", encoding="utf-8") as f:
-                f.write("image3.jpg\t[{\"transcription\": \"345,678\"}]\n")
+                f.write('image3.jpg\t[{"transcription": "345,678"}]\n')
 
             with open(char_dict, "w", encoding="utf-8") as f:
                 f.write("0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n,\n")
@@ -116,8 +121,10 @@ class TestPinballOCRTrainer:
             mock_open = Mock()
             mock_open.__enter__ = Mock(return_value=Mock())
             mock_open.__exit__ = Mock(return_value=None)
-            
-            with patch("os.makedirs"), patch("builtins.open", return_value=mock_open), patch("yaml.dump"):
+
+            with patch("os.makedirs"), patch(
+                "builtins.open", return_value=mock_open
+            ), patch("yaml.dump"):
                 config_path = trainer.create_paddleocr_config()
 
             assert config_path == "configs/pinball_ocr_config.yml"
@@ -173,13 +180,14 @@ class TestCommandLineInterface:
     def test_main_function_basic(self):
         """Test main function with basic arguments"""
         from train_model import main
-        
+
         # Mock sys.argv and the trainer
         test_args = ["train_model.py", "--epochs", "50", "--batch-size", "4"]
-        
-        with patch("sys.argv", test_args), \
-             patch("train_model.PinballOCRTrainer") as mock_trainer_class:
-            
+
+        with patch("sys.argv", test_args), patch(
+            "train_model.PinballOCRTrainer"
+        ) as mock_trainer_class:
+
             mock_trainer = Mock()
             mock_trainer.config = {"training": {}, "dataset": {}, "paths": {}}
             mock_trainer.train_model.return_value = "test_config.yml"

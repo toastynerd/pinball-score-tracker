@@ -59,7 +59,9 @@ class ProductionDataCollector:
             logger.info(f"Will process {len(match_links)} matches")
 
             for match_idx, match_url in enumerate(match_links):
-                logger.info(f"Processing match {match_idx + 1}/{len(match_links)}: {match_url}")
+                logger.info(
+                    f"Processing match {match_idx + 1}/{len(match_links)}: {match_url}"
+                )
 
                 # Get game links for this match
                 game_links = basic_scraper.get_game_links_from_match(match_url)[
@@ -140,7 +142,9 @@ class ProductionDataCollector:
 
         # Format for PaddleOCR training
         logger.info("Formatting data for PaddleOCR training...")
-        formatter = PaddleOCRFormatter(self.output_dir, f"{self.output_dir}/paddleocr_training")
+        formatter = PaddleOCRFormatter(
+            self.output_dir, f"{self.output_dir}/paddleocr_training"
+        )
         num_samples = formatter.process_dataset()
 
         logger.info(f"Training dataset created with {num_samples} samples")
@@ -156,7 +160,10 @@ class ProductionDataCollector:
                 "delay_between_requests": self.delay_between_requests,
                 "max_games_per_match": self.max_games_per_match,
             },
-            "results": {"total_training_samples": num_samples, "output_directory": self.output_dir},
+            "results": {
+                "total_training_samples": num_samples,
+                "output_directory": self.output_dir,
+            },
             "files_created": {
                 "raw_metadata": f"{self.output_dir}/raw_dataset_metadata.json",
                 "filtered_metadata": f"{self.output_dir}/filtered_dataset_metadata.json",
@@ -208,7 +215,9 @@ class ProductionDataCollector:
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Collect production training data from MNP")
+    parser = argparse.ArgumentParser(
+        description="Collect production training data from MNP"
+    )
     parser.add_argument(
         "--max-matches",
         type=int,
@@ -216,13 +225,21 @@ def main():
         help="Maximum number of matches to scrape (default: 3)",
     )
     parser.add_argument(
-        "--delay", type=int, default=5, help="Seconds to wait between requests (default: 5)"
+        "--delay",
+        type=int,
+        default=5,
+        help="Seconds to wait between requests (default: 5)",
     )
     parser.add_argument(
-        "--max-games", type=int, default=10, help="Maximum games per match (default: 10)"
+        "--max-games",
+        type=int,
+        default=10,
+        help="Maximum games per match (default: 10)",
     )
     parser.add_argument(
-        "--dry-run", action="store_true", help="Show what would be done without actually scraping"
+        "--dry-run",
+        action="store_true",
+        help="Show what would be done without actually scraping",
     )
 
     args = parser.parse_args()
@@ -249,7 +266,9 @@ def main():
 
     if report:
         logger.info("Data collection completed successfully!")
-        logger.info(f"Collected {report['results']['total_training_samples']} training samples")
+        logger.info(
+            f"Collected {report['results']['total_training_samples']} training samples"
+        )
     else:
         logger.error("Data collection failed!")
 

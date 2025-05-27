@@ -66,7 +66,9 @@ class MNPScraper:
             # Construct game URLs - typically 4 games per match
             for round_num in [1, 2, 3, 4, 5]:  # Try multiple rounds
                 for game_num in [1, 2, 3, 4]:  # Typically 4 games per round
-                    game_url = f"{self.base_url}/games/{match_id}.{round_num}.{game_num}"
+                    game_url = (
+                        f"{self.base_url}/games/{match_id}.{round_num}.{game_num}"
+                    )
                     game_links.append(game_url)
 
         logger.info(f"Found/constructed {len(game_links)} game links for match")

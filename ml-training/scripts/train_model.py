@@ -91,7 +91,9 @@ class PinballOCRTrainer:
             # Check first line format
             first_line = lines[0].strip()
             if "\t" not in first_line:
-                raise ValueError(f"Invalid format in training list. Expected tab-separated values.")
+                raise ValueError(
+                    f"Invalid format in training list. Expected tab-separated values."
+                )
 
         logger.info(f"Dataset validation passed. Found {len(lines)} training samples.")
         return len(lines)
@@ -125,7 +127,11 @@ class PinballOCRTrainer:
                 "algorithm": "CRNN",
                 "Transform": None,
                 "Backbone": {"name": "ResNet", "layers": 34},
-                "Neck": {"name": "SequenceEncoder", "encoder_type": "rnn", "hidden_size": 256},
+                "Neck": {
+                    "name": "SequenceEncoder",
+                    "encoder_type": "rnn",
+                    "hidden_size": 256,
+                },
                 "Head": {"name": "CTCHead", "fc_decay": 0.0001},
             },
             "Loss": {"name": "CTCLoss"},
@@ -138,7 +144,10 @@ class PinballOCRTrainer:
                     "learning_rate": self.config["training"]["learning_rate"],
                     "warmup_epoch": 2,
                 },
-                "regularizer": {"name": "L2", "factor": self.config["optimizer"]["weight_decay"]},
+                "regularizer": {
+                    "name": "L2",
+                    "factor": self.config["optimizer"]["weight_decay"],
+                },
             },
             "PostProcess": {"name": "CTCLabelDecode"},
             "Metric": {"name": "RecMetric", "main_indicator": "acc"},
@@ -258,7 +267,9 @@ class PinballOCRTrainer:
             ],
         }
 
-        info_path = os.path.join(self.config["paths"]["output_dir"], "training_info.json")
+        info_path = os.path.join(
+            self.config["paths"]["output_dir"], "training_info.json"
+        )
         with open(info_path, "w") as f:
             json.dump(info, f, indent=2)
 
@@ -266,14 +277,18 @@ class PinballOCRTrainer:
         logger.info("To start training:")
         logger.info("1. Install PaddleOCR dependencies")
         logger.info("2. Use the generated config file with PaddleOCR training tools")
-        logger.info(f"3. Monitor training progress in: {self.config['paths']['log_dir']}")
+        logger.info(
+            f"3. Monitor training progress in: {self.config['paths']['log_dir']}"
+        )
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="Train PaddleOCR model for pinball score recognition"
     )
-    parser.add_argument("--config", type=str, help="Path to training configuration file")
+    parser.add_argument(
+        "--config", type=str, help="Path to training configuration file"
+    )
     parser.add_argument(
         "--data-dir",
         type=str,
@@ -286,9 +301,13 @@ def main():
         default="models/pinball_ocr",
         help="Directory to save trained model",
     )
-    parser.add_argument("--epochs", type=int, default=100, help="Number of training epochs")
+    parser.add_argument(
+        "--epochs", type=int, default=100, help="Number of training epochs"
+    )
     parser.add_argument("--batch-size", type=int, default=8, help="Training batch size")
-    parser.add_argument("--learning-rate", type=float, default=0.001, help="Learning rate")
+    parser.add_argument(
+        "--learning-rate", type=float, default=0.001, help="Learning rate"
+    )
 
     args = parser.parse_args()
 

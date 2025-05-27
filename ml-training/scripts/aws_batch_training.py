@@ -186,7 +186,10 @@ class AWSBatchTrainingOrchestrator:
             log_stream = f"{job_id}"
 
             response = self.logs_client.get_log_events(
-                logGroupName=log_group, logStreamName=log_stream, limit=tail, startFromHead=False
+                logGroupName=log_group,
+                logStreamName=log_stream,
+                limit=tail,
+                startFromHead=False,
             )
 
             if response["events"]:
@@ -301,16 +304,22 @@ class AWSBatchTrainingOrchestrator:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="AWS Batch PaddleOCR training orchestrator")
+    parser = argparse.ArgumentParser(
+        description="AWS Batch PaddleOCR training orchestrator"
+    )
     parser.add_argument(
         "command",
         choices=["upload", "submit", "monitor", "download", "pipeline"],
         help="Command to execute",
     )
-    parser.add_argument("--training-data", required=True, help="Local training data directory")
+    parser.add_argument(
+        "--training-data", required=True, help="Local training data directory"
+    )
     parser.add_argument("--s3-bucket", required=True, help="S3 bucket name")
     parser.add_argument("--job-queue", required=True, help="AWS Batch job queue name")
-    parser.add_argument("--job-definition", required=True, help="AWS Batch job definition name")
+    parser.add_argument(
+        "--job-definition", required=True, help="AWS Batch job definition name"
+    )
     parser.add_argument("--output-dir", required=True, help="Local output directory")
     parser.add_argument("--job-name", help="Job name (for submit/monitor commands)")
     parser.add_argument("--job-id", help="Job ID (for monitor command)")
@@ -341,7 +350,9 @@ def main():
 
     elif args.command == "submit":
         if not args.job_name:
-            args.job_name = f"pinball-ocr-training-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+            args.job_name = (
+                f"pinball-ocr-training-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+            )
 
         s3_data_uri = f"s3://{args.s3_bucket}/training-data"
         s3_output_uri = f"s3://{args.s3_bucket}/training-outputs/{args.job_name}"

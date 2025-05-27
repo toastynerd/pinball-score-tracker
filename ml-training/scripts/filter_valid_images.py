@@ -108,7 +108,9 @@ def filter_dataset(dataset_dir):
                 full_path = img_path
             else:
                 # Remove dataset_dir from path if it's duplicated
-                clean_path = img_path.replace(f"{dataset_dir}/", "").replace(dataset_dir, "")
+                clean_path = img_path.replace(f"{dataset_dir}/", "").replace(
+                    dataset_dir, ""
+                )
                 full_path = os.path.join(dataset_dir, clean_path)
 
             if os.path.exists(full_path):

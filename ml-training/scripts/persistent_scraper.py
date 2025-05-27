@@ -38,11 +38,17 @@ class PersistentScraper:
         """
         self.base_delay = base_delay
         self.max_delay = max_delay
-        self.session_name = session_name or f"persistent_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        self.session_name = (
+            session_name or f"persistent_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
 
         # Progress tracking
         self.state_file = f"scraper_state_{self.session_name}.json"
         self.output_dir = f"data/persistent_collection_{self.session_name}"
+
+        # Driver management
+        self.games_since_driver_restart = 0
+        self.max_games_per_driver = 50  # Restart driver every 50 games
 
         # Setup directories
         os.makedirs(self.output_dir, exist_ok=True)
@@ -158,12 +164,16 @@ class PersistentScraper:
 
             # Process each match
             for match_idx, match_url in enumerate(remaining_matches):
-                logger.info(f"Processing match {match_idx + 1}/{len(remaining_matches)}")
+                logger.info(
+                    f"Processing match {match_idx + 1}/{len(remaining_matches)}"
+                )
                 logger.info(f"Match URL: {match_url}")
 
                 try:
                     # Process this match
-                    match_success = self.process_match(basic_scraper, match_url, match_idx)
+                    match_success = self.process_match(
+                        basic_scraper, match_url, match_idx
+                    )
 
                     if match_success:
                         self.state["completed_matches"].append(match_url)
@@ -220,10 +230,39 @@ class PersistentScraper:
             for game_idx, game_url in enumerate(game_links):
                 logger.info(f"    Processing game {game_idx + 1}/{len(game_links)}")
 
+                # Periodic driver restart to prevent memory issues and session timeouts
+                self.games_since_driver_restart += 1
+                if self.games_since_driver_restart >= self.max_games_per_driver:
+                    logger.info("    Restarting driver for maintenance...")
+                    self.selenium_scraper.close()
+                    time.sleep(5)  # Brief pause
+                    self.selenium_scraper = MNPSeleniumScraper()
+                    self.games_since_driver_restart = 0
+                    logger.info("    Driver restarted successfully")
+
                 try:
-                    # Scrape game data
-                    game_data = self.selenium_scraper.scrape_game_with_selenium(game_url)
-                    self.state["statistics"]["total_requests_made"] += 1
+                    # Scrape game data with retry logic
+                    game_data = None
+                    max_retries = 3
+                    for retry in range(max_retries):
+                        try:
+                            game_data = self.selenium_scraper.scrape_game_with_selenium(
+                                game_url
+                            )
+                            self.state["statistics"]["total_requests_made"] += 1
+                            break  # Success, exit retry loop
+                        except Exception as retry_error:
+                            logger.warning(
+                                f"    Retry {retry + 1}/{max_retries} failed: {retry_error}"
+                            )
+                            if retry < max_retries - 1:
+                                logger.info(f"    Waiting 30s before retry...")
+                                time.sleep(30)
+                            else:
+                                logger.error(
+                                    f"    All retries failed for game {game_url}"
+                                )
+                                game_data = None
 
                     if game_data and game_data.get("js_data", {}).get("scores"):
                         scores = game_data.get("js_data", {}).get("scores", [])
@@ -267,9 +306,7 @@ class PersistentScraper:
 
             # Save match data if we found any
             if match_data:
-                match_file = (
-                    f"{self.output_dir}/match_{self.state['total_matches_processed'] + 1}_data.json"
-                )
+                match_file = f"{self.output_dir}/match_{self.state['total_matches_processed'] + 1}_data.json"
                 with open(match_file, "w") as f:
                     json.dump(match_data, f, indent=2)
 
@@ -324,7 +361,9 @@ class PersistentScraper:
 
     def generate_final_report(self):
         """Generate final collection report"""
-        total_time = datetime.now() - datetime.fromisoformat(self.state["session_start"])
+        total_time = datetime.now() - datetime.fromisoformat(
+            self.state["session_start"]
+        )
 
         report = {
             "session_summary": {
@@ -365,7 +404,9 @@ class PersistentScraper:
         logger.info(f"Matches processed: {self.state['total_matches_processed']}")
         logger.info(f"Games with data: {self.state['statistics']['games_with_data']}")
         logger.info(f"Images collected: {self.state['statistics']['images_collected']}")
-        logger.info(f"Total requests: {self.state['statistics']['total_requests_made']}")
+        logger.info(
+            f"Total requests: {self.state['statistics']['total_requests_made']}"
+        )
         logger.info(f"Success rate: {report['data_quality']['success_rate']:.1%}")
         logger.info(f"Final report: {report_file}")
         logger.info("=" * 80)
@@ -387,7 +428,9 @@ def main():
         default=300,
         help="Maximum delay between matches in seconds (default: 300)",
     )
-    parser.add_argument("--session-name", type=str, help="Name for this scraping session")
+    parser.add_argument(
+        "--session-name", type=str, help="Name for this scraping session"
+    )
     parser.add_argument("--resume", type=str, help="Resume a previous session by name")
 
     args = parser.parse_args()
