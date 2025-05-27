@@ -4,19 +4,19 @@ Persistent scraper for collecting all MNP data over multiple days
 Designed to be respectful with very long delays and resumable sessions
 """
 
-import time
 import json
-import os
 import logging
-from datetime import datetime, timedelta
+import os
 import signal
 import sys
+import time
+from datetime import datetime, timedelta
 from pathlib import Path
 
-from scrape_mnp_data import MNPScraper
-from scrape_mnp_selenium import MNPSeleniumScraper
 from filter_valid_images import filter_dataset
 from format_paddleocr_data import PaddleOCRFormatter
+from scrape_mnp_data import MNPScraper
+from scrape_mnp_selenium import MNPSeleniumScraper
 
 logging.basicConfig(
     level=logging.INFO,

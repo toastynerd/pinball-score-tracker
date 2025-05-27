@@ -3,10 +3,10 @@
 PaddleOCR training script for pinball score recognition
 """
 
-import os
-import json
 import argparse
+import json
 import logging
+import os
 from pathlib import Path
 
 # Configure logging

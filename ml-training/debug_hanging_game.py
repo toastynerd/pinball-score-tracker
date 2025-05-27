@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-import sys
-import os
-import time
 import logging
+import os
+import sys
+import time
 
 # Add scripts directory to path
 sys.path.append("scripts")

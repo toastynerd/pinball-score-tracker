@@ -4,15 +4,16 @@ AWS Batch training orchestration script for PaddleOCR
 Handles job submission, monitoring, and artifact management
 """
 
-import boto3
-import json
-import time
-import logging
 import argparse
-from pathlib import Path
-from typing import Dict, Optional, List
-from datetime import datetime
+import json
+import logging
 import os
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional
+
+import boto3
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

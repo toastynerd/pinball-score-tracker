@@ -4,14 +4,15 @@ Data preprocessing pipeline for pinball score pictures
 Prepares images for optimal PaddleOCR training
 """
 
-import cv2
-import numpy as np
-import os
+import argparse
 import json
 import logging
+import os
 from pathlib import Path
-from typing import List, Tuple, Dict, Optional
-import argparse
+from typing import Dict, List, Optional, Tuple
+
+import cv2
+import numpy as np
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

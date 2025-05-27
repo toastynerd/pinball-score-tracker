@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import sys
-import os
-import time
 import json
 import logging
+import os
 import random
+import sys
+import time
 from datetime import datetime
 
 # Add scripts directory to path

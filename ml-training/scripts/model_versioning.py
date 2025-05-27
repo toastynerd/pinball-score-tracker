@@ -4,17 +4,18 @@ Model artifact storage and versioning system for PaddleOCR models
 Supports local storage, S3, and DVC-like versioning
 """
 
-import json
+import argparse
 import hashlib
-import shutil
+import json
 import logging
+import shutil
+import tarfile
+from dataclasses import asdict, dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Union
-from datetime import datetime
-import tarfile
+
 import boto3
-from dataclasses import dataclass, asdict
-import argparse
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

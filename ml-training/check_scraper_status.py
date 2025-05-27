@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
+import glob
 import json
 import os
-import glob
 
 
 def check_scraper_status():

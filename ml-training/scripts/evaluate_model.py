@@ -3,17 +3,18 @@
 Model evaluation and validation scripts for pinball score OCR
 """
 
-import os
+import argparse
 import json
+import logging
+import os
+import re
+from dataclasses import asdict, dataclass
+from difflib import SequenceMatcher
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
 import cv2
 import numpy as np
-import logging
-from pathlib import Path
-from typing import List, Dict, Tuple, Optional
-import argparse
-from dataclasses import dataclass, asdict
-import re
-from difflib import SequenceMatcher
 
 try:
     from paddleocr import PaddleOCR

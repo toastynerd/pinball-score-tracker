@@ -4,18 +4,18 @@ Production data scraping script with conservative request limits
 Designed to be respectful to the MNP server while collecting quality training data
 """
 
-import time
 import json
-import os
 import logging
+import os
+import time
 from datetime import datetime
 from pathlib import Path
 
+from filter_valid_images import filter_dataset
+from format_paddleocr_data import PaddleOCRFormatter
 # Import our existing scrapers
 from scrape_mnp_data import MNPScraper
 from scrape_mnp_selenium import MNPSeleniumScraper
-from filter_valid_images import filter_dataset
-from format_paddleocr_data import PaddleOCRFormatter
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

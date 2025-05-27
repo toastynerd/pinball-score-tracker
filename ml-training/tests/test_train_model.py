@@ -3,12 +3,13 @@
 Tests for ML model training functionality
 """
 
-import pytest
-import tempfile
-import os
 import json
+import os
 import sys
+import tempfile
 from unittest.mock import Mock, patch
+
+import pytest
 
 # Add scripts directory to path
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "scripts"))
